@@ -4,7 +4,21 @@
       <div class="q-mb-xl">
         <q-input v-model="tempData.name" label="姓名" />
         <q-input v-model="tempData.age" label="年齡" />
-        <q-btn color="primary" class="q-mt-md">新增</q-btn>
+
+        <q-btn
+          color="primary"
+          class="q-mt-md"
+          @click="handleClickAdd(tempData)"
+          v-if="btnAction === 'add'"
+          >新增</q-btn
+        >
+        <q-btn
+          color="primary"
+          class="q-mt-md"
+          @click="handleClickEdit(tempData)"
+          v-if="btnAction === 'edit'"
+          >編輯</q-btn
+        >
       </div>
 
       <q-table
@@ -74,6 +88,24 @@
         </template>
       </q-table>
     </div>
+    <q-dialog v-model="comfirmDelete" persistent>
+      <q-card>
+        <q-card-section class="row items-center">
+          <q-avatar icon="signal_wifi_off" color="primary" text-color="white" />
+          <span class="q-ml-sm">確定刪除？</span>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="取消" color="primary" v-close-popup />
+          <q-btn
+            flat
+            label="確定刪除"
+            color="danger"
+            @click="handleClickDelete(deleteId)"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -86,10 +118,16 @@ interface btnType {
   icon: string;
   status: string;
 }
+interface inputData {
+  name: string;
+  age: string;
+  id?: number;
+}
 const blockData = ref([
   {
     name: 'test',
     age: 25,
+    id: new Date().getTime(),
   },
 ]);
 const tableConfig = ref([
@@ -123,8 +161,47 @@ const tempData = ref({
   name: '',
   age: '',
 });
-function handleClickOption(btn, data) {
-  // ...
+const btnAction = ref('add');
+const comfirmDelete = ref(false);
+const deleteId = ref();
+function handleClickOption(btn: btnType, data: inputData) {
+  if (btn.status === 'edit') {
+    tempData.value = { ...data };
+    btnAction.value = 'edit';
+  } else if (btn.status === 'delete') {
+    comfirmDelete.value = true;
+    deleteId.value = data.id;
+  }
+}
+function handleClickAdd(data: inputData) {
+  blockData.value.push({
+    age: parseInt(data.age),
+    name: data.name,
+    id: new Date().getTime(),
+  });
+  tempData.value = {
+    name: '',
+    age: '',
+  };
+}
+function handleClickEdit(data: inputData) {
+  const index = blockData.value.findIndex((item) => item.id === data.id);
+  if (index !== -1) {
+    blockData.value[index] = {
+      ...data,
+      age: parseInt(data.age),
+      id: new Date().getTime(),
+    };
+    tempData.value = {
+      name: '',
+      age: '',
+    };
+    btnAction.value = 'add';
+  }
+}
+function handleClickDelete(id: number) {
+  blockData.value = blockData.value.filter((item) => item.id !== id);
+  comfirmDelete.value = false;
 }
 </script>
 
